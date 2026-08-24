@@ -1,0 +1,18 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Big Zip Files
+IFN680/materials/reference/IFN680_2020_Alice.zip
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# Python / Jupyter artifacts
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+EOF
