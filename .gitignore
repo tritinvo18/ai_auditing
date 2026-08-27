@@ -10,6 +10,7 @@ IFN680/materials/reference/IFN680_2020_Alice.zip
 .venv/
 venv/
 ENV/
+misc/
 
 # Python / Jupyter artifacts
 __pycache__/
