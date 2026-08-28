@@ -48,7 +48,8 @@ def get_dataloaders(internal_path, external_path, batch_size=16, num_workers=1):
 # Initializes a ResNet18 model and updates the final layer for the specified number of classes.
 def setup_model(num_classes, weights_path=None, device='cpu'):
     # Load the base ResNet18 architecture
-    backbone = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.DEFAULT)
+    weights = None if weights_path else torchvision.models.ResNet18_Weights.DEFAULT
+    backbone = torchvision.models.resnet18(weights=weights)
     
     # Replace the final fully connected layer to match the required number of classes
     backbone.fc = nn.Linear(backbone.fc.in_features, num_classes)
@@ -225,3 +226,26 @@ def denormalize_image(image):
     image = image.numpy().transpose(1, 2, 0)
     image = image * np.array(imagenet_stds) + np.array(imagenet_means)
     return np.clip(image, 0, 1)
+
+# Computes the Class Activation Map (CAM) given convolutional feature maps and fully connected layer weights
+def compute_cam(conv_feature_map, fc_weights, image_size=(224, 224)):
+    # Calculate weighted combination of convolutional feature maps
+    cam = torch.sum(fc_weights[:, None, None] * conv_feature_map, dim=0)
+    
+    # Apply ReLU / clamp negative activations to zero
+    cam = torch.clamp(cam, min=0)
+    
+    # Normalize CAM values to [0, 1] range
+    if torch.max(cam) > 0:
+        cam = cam / torch.max(cam)
+        
+    # Resize CAM to the target image dimensions using bilinear interpolation
+    cam = F.interpolate(
+        cam.unsqueeze(0).unsqueeze(0),
+        size=image_size,
+        mode='bilinear',
+        align_corners=False
+    ).squeeze().cpu().numpy()
+    
+    return cam
+
